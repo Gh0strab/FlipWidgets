@@ -12,6 +12,8 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.view.MotionEvent
+import android.view.View
 import android.widget.GridLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,8 +80,8 @@ class WidgetHostActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         widgetContainer = findViewById(R.id.widgetHostContainer)
-        widgetContainer.columnCount = 6
-        widgetContainer.rowCount = 6
+        widgetContainer.columnCount = 4
+        widgetContainer.rowCount = 4
 
         addWidgetFab = findViewById(R.id.addWidgetFab)
         addWidgetFab.setOnClickListener { selectWidget() }
@@ -139,9 +141,14 @@ class WidgetHostActivity : AppCompatActivity() {
 
         val info = appWidgetManager.getAppWidgetInfo(appWidgetId) ?: return
         val hostView = appWidgetHost.createView(this, appWidgetId, info)
+        hostView.setAppWidget(appWidgetId, info)
 
         addWidgetToContainer(hostView, appWidgetId, info)
-        saveWidgetData(appWidgetId, info)
+        
+        hostView.post {
+            val preview = captureWidgetSnapshot(hostView)
+            saveWidgetData(appWidgetId, info, preview)
+        }
 
         pendingAppWidgetId = -1
         Toast.makeText(this, "Widget added!", Toast.LENGTH_SHORT).show()
@@ -166,10 +173,123 @@ class WidgetHostActivity : AppCompatActivity() {
 
         hostView.layoutParams = params
         hostView.tag = appWidgetId
+        
+        val widthDp = (w / px).toInt()
+        val heightDp = (h / px).toInt()
+        updateWidgetSize(appWidgetId, widthDp, heightDp)
+        
+        hostView.setOnLongClickListener { view ->
+            startDragAndDrop(view as AppWidgetHostView)
+            true
+        }
+        
+        hostView.setOnDragListener(widgetDragListener)
+        
         widgetContainer.addView(hostView)
     }
+    
+    private fun updateWidgetSize(appWidgetId: Int, widthDp: Int, heightDp: Int) {
+        val options = android.os.Bundle().apply {
+            putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, widthDp)
+            putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, heightDp)
+            putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, widthDp)
+            putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, heightDp)
+        }
+        appWidgetManager.updateAppWidgetOptions(appWidgetId, options)
+    }
+    
+    private fun startDragAndDrop(view: AppWidgetHostView) {
+        val shadowBuilder = View.DragShadowBuilder(view)
+        view.startDragAndDrop(null, shadowBuilder, view, 0)
+        view.alpha = 0.5f
+    }
+    
+    private val widgetDragListener = View.OnDragListener { targetView, event ->
+        when (event.action) {
+            android.view.DragEvent.ACTION_DRAG_STARTED -> {
+                true
+            }
+            
+            android.view.DragEvent.ACTION_DRAG_ENTERED -> {
+                if (targetView is AppWidgetHostView) {
+                    targetView.alpha = 0.3f
+                }
+                true
+            }
+            
+            android.view.DragEvent.ACTION_DRAG_EXITED -> {
+                if (targetView is AppWidgetHostView) {
+                    targetView.alpha = 1.0f
+                }
+                true
+            }
+            
+            android.view.DragEvent.ACTION_DROP -> {
+                val draggedView = event.localState as? AppWidgetHostView
+                if (draggedView != null && targetView is AppWidgetHostView && draggedView != targetView) {
+                    swapWidgets(draggedView, targetView)
+                    Toast.makeText(this, "Widgets swapped!", Toast.LENGTH_SHORT).show()
+                }
+                true
+            }
+            
+            android.view.DragEvent.ACTION_DRAG_ENDED -> {
+                val draggedView = event.localState as? AppWidgetHostView
+                draggedView?.alpha = 1.0f
+                if (targetView is AppWidgetHostView) {
+                    targetView.alpha = 1.0f
+                }
+                true
+            }
+            
+            else -> false
+        }
+    }
+    
+    private fun swapWidgets(widget1: AppWidgetHostView, widget2: AppWidgetHostView) {
+        val index1 = widgetContainer.indexOfChild(widget1)
+        val index2 = widgetContainer.indexOfChild(widget2)
+        
+        if (index1 == -1 || index2 == -1) return
+        
+        widgetContainer.removeView(widget1)
+        widgetContainer.removeView(widget2)
+        
+        if (index1 < index2) {
+            widgetContainer.addView(widget2, index1)
+            widgetContainer.addView(widget1, index2)
+        } else {
+            widgetContainer.addView(widget1, index2)
+            widgetContainer.addView(widget2, index1)
+        }
+        
+        val id1 = widget1.tag as? Int
+        val id2 = widget2.tag as? Int
+        if (id1 != null && id2 != null) {
+            updateWidgetPositions(id1, id2)
+        }
+    }
+    
+    private fun updateWidgetPositions(widgetId1: Int, widgetId2: Int) {
+        val widgets = widgetDataManager.getWidgetsForContainer(containerId).toMutableList()
+        val widget1Data = widgets.find { it.id == widgetId1.toString() }
+        val widget2Data = widgets.find { it.id == widgetId2.toString() }
+        
+        if (widget1Data != null && widget2Data != null) {
+            val tempX = widget1Data.gridX
+            val tempY = widget1Data.gridY
+            
+            widgets.removeAll { it.id == widgetId1.toString() || it.id == widgetId2.toString() }
+            
+            widgets.add(widget1Data.copy(gridX = widget2Data.gridX, gridY = widget2Data.gridY))
+            widgets.add(widget2Data.copy(gridX = tempX, gridY = tempY))
+            
+            widgets.forEach { widgetDataManager.saveWidget(it) }
+            updateCoverScreenWidget()
+        }
+    }
 
-    private fun saveWidgetData(appWidgetId: Int, info: AppWidgetProviderInfo) {
+    private fun saveWidgetData(appWidgetId: Int, info: AppWidgetProviderInfo, preview: Bitmap? = null) {
         val gs = WidgetSizeCalculator.calculateGridSize(info)
         
         val iconBitmap = try {
@@ -185,6 +305,7 @@ class WidgetHostActivity : AppCompatActivity() {
                 provider = info.provider,
                 label = info.loadLabel(packageManager),
                 icon = iconBitmap,
+                preview = preview,
                 gridX = 0,
                 gridY = 0,
                 gridWidth = gs.columnSpan,
@@ -194,6 +315,25 @@ class WidgetHostActivity : AppCompatActivity() {
         )
         
         updateCoverScreenWidget()
+    }
+    
+    private fun captureWidgetSnapshot(view: AppWidgetHostView): Bitmap? {
+        return try {
+            if (view.width == 0 || view.height == 0) {
+                return null
+            }
+            
+            val bitmap = Bitmap.createBitmap(
+                view.width,
+                view.height,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            view.draw(canvas)
+            bitmap
+        } catch (e: Exception) {
+            null
+        }
     }
     
     private fun drawableToBitmap(drawable: Drawable): Bitmap {
@@ -227,6 +367,7 @@ class WidgetHostActivity : AppCompatActivity() {
             val id = widget.id.toIntOrNull() ?: return@forEach
             val info = appWidgetManager.getAppWidgetInfo(id) ?: return@forEach
             val hostView = appWidgetHost.createView(this, id, info)
+            hostView.setAppWidget(id, info)
             addWidgetToContainer(hostView, id, info)
         }
     }
