@@ -7,7 +7,7 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_container"
     android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen|keyguard"
+    android:widgetCategory="keyguard"
     android:description="@string/app_name"
     android:previewImage="@mipmap/ic_launcher"
     android:targetCellWidth="2"
