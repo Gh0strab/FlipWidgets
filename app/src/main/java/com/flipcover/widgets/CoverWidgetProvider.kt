@@ -46,20 +46,17 @@ class CoverWidgetProvider : AppWidgetProvider() {
             views.setRemoteAdapter(R.id.widgetContainer, intent)
 
             val clickIntent = Intent(context, WidgetHostActivity::class.java).apply {
+                action = Intent.ACTION_MAIN
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-
-            val activityOptions = android.app.ActivityOptions.makeBasic().apply {
-                launchDisplayId = 1
+                putExtra("container_id", 1)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
 
             val clickPendingIntent = android.app.PendingIntent.getActivity(
                 context,
                 appWidgetId,
                 clickIntent,
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
-                activityOptions.toBundle()
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
             )
 
             views.setOnClickPendingIntent(R.id.widgetContainerRoot, clickPendingIntent)
