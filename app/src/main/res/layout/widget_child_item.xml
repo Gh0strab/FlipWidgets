@@ -1,29 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="4dp"
-    android:gravity="center"
-    android:minHeight="72dp">
+    android:layout_height="match_parent"
+    android:padding="2dp">
 
     <ImageView
-        android:id="@+id/widgetIcon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:scaleType="centerInside"
-        android:contentDescription="Widget Icon"
+        android:id="@+id/widgetPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="Widget Preview"
         android:background="@android:color/transparent" />
 
-    <TextView
-        android:id="@+id/widgetLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:textSize="10sp"
-        android:maxLines="2"
-        android:ellipsize="end"
+    <LinearLayout
+        android:id="@+id/widgetFallback"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
         android:gravity="center"
-        android:textColor="?android:attr/textColorPrimary" />
+        android:visibility="gone">
 
-</LinearLayout>
+        <ImageView
+            android:id="@+id/widgetIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="centerInside"
+            android:contentDescription="Widget Icon"
+            android:background="@android:color/transparent" />
+
+        <TextView
+            android:id="@+id/widgetLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="10sp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:textColor="?android:attr/textColorPrimary" />
+    </LinearLayout>
+
+</FrameLayout>
