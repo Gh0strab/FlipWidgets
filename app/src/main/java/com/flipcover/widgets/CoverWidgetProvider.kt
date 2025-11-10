@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.RemoteViews
 
 class CoverWidgetProvider : AppWidgetProvider() {
@@ -14,6 +15,9 @@ class CoverWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         for (appWidgetId in appWidgetIds) {
+            // Map each appWidgetId to logical container 1 (or whatever your main screen uses)
+            val dataManager = WidgetDataManager(context)
+            dataManager.setAppWidgetMapping(appWidgetId, 1)
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
@@ -26,48 +30,42 @@ class CoverWidgetProvider : AppWidgetProvider() {
         super.onDisabled(context)
     }
 
-companion object {
-    fun updateAppWidget(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        val views = RemoteViews(context.packageName, R.layout.widget_container)
+    companion object {
+        fun updateAppWidget(
+            context: Context,
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int
+        ) {
+            val views = RemoteViews(context.packageName, R.layout.widget_container)
 
-        // --- Make the RemoteViewsService Intent unique per appWidgetId ---
-        val intent = Intent(context, WidgetContainerService::class.java)
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            val intent = Intent(context, WidgetContainerService::class.java).apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME)) // unique per widget
+            }
 
-        // IMPORTANT: make the intent unique by encoding it as a Uri so adapter instances aren't shared
-        intent.data = android.net.Uri.parse(intent.toUri(android.content.Intent.URI_INTENT_SCHEME))
+            views.setRemoteAdapter(R.id.widgetContainer, intent)
 
-        views.setRemoteAdapter(R.id.widgetContainer, intent)
+            val clickIntent = Intent(context, WidgetHostActivity::class.java).apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
 
-        // --- Create a click Intent that includes the appWidgetId and use a unique request code ---
-        val clickIntent = Intent(context, WidgetHostActivity::class.java).apply {
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+            val activityOptions = android.app.ActivityOptions.makeBasic().apply {
+                launchDisplayId = 1
+            }
 
-        val activityOptions = android.app.ActivityOptions.makeBasic().apply {
-            launchDisplayId = 1
-        }
+            val clickPendingIntent = android.app.PendingIntent.getActivity(
+                context,
+                appWidgetId,
+                clickIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+                activityOptions.toBundle()
+            )
 
-        // Use appWidgetId as requestCode so each widget instance gets a unique PendingIntent
-        val clickPendingIntent = android.app.PendingIntent.getActivity(
-            context,
-            appWidgetId, // << unique request code per widget
-            clickIntent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
-            activityOptions.toBundle()
-        )
+            views.setOnClickPendingIntent(R.id.widgetContainerRoot, clickPendingIntent)
 
-        views.setOnClickPendingIntent(R.id.widgetContainerRoot, clickPendingIntent)
-
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-
-        // Notify that the collection data changed for this widget id specifically
-        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetContainer)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetContainer)
         }
     }
 }
