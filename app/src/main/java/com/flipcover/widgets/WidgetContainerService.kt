@@ -21,7 +21,7 @@ class WidgetContainerFactory(
         AppWidgetManager.EXTRA_APPWIDGET_ID,
         AppWidgetManager.INVALID_APPWIDGET_ID
     )
-    
+
     private var childWidgets: List<ChildWidgetData> = emptyList()
     private lateinit var widgetDataManager: WidgetDataManager
 
@@ -35,7 +35,9 @@ class WidgetContainerFactory(
     }
 
     private fun loadWidgets() {
-        childWidgets = widgetDataManager.getWidgetsForContainer(appWidgetId)
+        val mappedId = widgetDataManager.getContainerIdForAppWidget(appWidgetId)
+        val containerId = if (mappedId != -1) mappedId else 1  // fallback default
+        childWidgets = widgetDataManager.getWidgetsForContainer(containerId)
     }
 
     override fun onDestroy() {
@@ -51,18 +53,17 @@ class WidgetContainerFactory(
 
         val widget = childWidgets[position]
         val views = RemoteViews(context.packageName, R.layout.widget_child_item)
-        
+
         views.setTextViewText(R.id.widgetLabel, widget.label)
-        views.setImageViewBitmap(R.id.widgetIcon, widget.icon)
-        
+        if (widget.icon != null) {
+            views.setImageViewBitmap(R.id.widgetIcon, widget.icon)
+        }
+
         return views
     }
 
     override fun getLoadingView(): RemoteViews? = null
-
     override fun getViewTypeCount(): Int = 1
-
     override fun getItemId(position: Int): Long = position.toLong()
-
     override fun hasStableIds(): Boolean = true
 }
