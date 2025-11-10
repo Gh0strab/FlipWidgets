@@ -7,7 +7,7 @@ object WidgetSizeCalculator {
     
     private const val CELL_SIZE_DP = 70
     private const val CELL_GAP_DP = 8
-    const val MAX_GRID_SPAN = 6
+    const val MAX_GRID_SPAN = 4
     
     data class GridSize(
         val columnSpan: Int,
