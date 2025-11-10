@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flip Cover Widgets</string>
+    <string name="select_widget">Select Widget</string>
+    <string name="edit_grid">Edit Widget Grid</string>
+    <string name="add_widget">Add Widget to Cover Screen</string>
+    <string name="widget_added">Widget added to cover screen</string>
+    <string name="widget_removed">Widget removed</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="grant_permission">Please grant widget binding permission</string>
+    <string name="no_widgets">No widgets available</string>
+    <string name="cover_screen_widgets">Cover Screen Widgets</string>
+    <string name="main_screen_widgets">Main Screen Widgets</string>
+    <string name="grid_size">Grid Size: Dynamic (up to 6x6)</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="widget_container">Widget Container</string>
+    <string name="open_widget_host">Open Widget Container (Interactive)</string>
+</resources>

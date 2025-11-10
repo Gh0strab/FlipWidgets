@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.Material3.Dark"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/gridInfoText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/grid_size"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/gridRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/gridInfoText"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer" />
+
+    <LinearLayout
+        android:id="@+id/buttonContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addWidgetToGridButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/add_widget"
+            android:layout_marginEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveGridButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/save" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
