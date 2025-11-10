@@ -54,9 +54,17 @@ class WidgetContainerFactory(
         val widget = childWidgets[position]
         val views = RemoteViews(context.packageName, R.layout.widget_child_item)
 
-        views.setTextViewText(R.id.widgetLabel, widget.label)
-        if (widget.icon != null) {
-            views.setImageViewBitmap(R.id.widgetIcon, widget.icon)
+        if (widget.preview != null) {
+            views.setImageViewBitmap(R.id.widgetPreview, widget.preview)
+            views.setViewVisibility(R.id.widgetPreview, android.view.View.VISIBLE)
+            views.setViewVisibility(R.id.widgetFallback, android.view.View.GONE)
+        } else {
+            views.setViewVisibility(R.id.widgetPreview, android.view.View.GONE)
+            views.setViewVisibility(R.id.widgetFallback, android.view.View.VISIBLE)
+            views.setTextViewText(R.id.widgetLabel, widget.label)
+            if (widget.icon != null) {
+                views.setImageViewBitmap(R.id.widgetIcon, widget.icon)
+            }
         }
 
         return views
