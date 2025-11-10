@@ -11,7 +11,7 @@ data class ChildWidgetData(
     val id: String,
     val provider: ComponentName,
     val label: String,
-    val icon: Bitmap? = null,  // ✅ RESTORED Bitmap
+    val icon: Bitmap? = null,
     val gridX: Int,
     val gridY: Int,
     val gridWidth: Int,
@@ -24,7 +24,7 @@ data class ChildWidgetSerializable(
     val providerPackage: String,
     val providerClass: String,
     val label: String,
-    val iconBase64: String? = null, // reserved for later
+    val iconBase64: String? = null,
     val gridX: Int,
     val gridY: Int,
     val gridWidth: Int,
@@ -41,6 +41,7 @@ class WidgetDataManager(private val context: Context) {
 
     private val gson = Gson()
 
+    /** Save a single widget entry to the correct container */
     fun saveWidget(widget: ChildWidgetData) {
         val widgets = getWidgetsForContainer(widget.containerId).toMutableList()
         widgets.removeAll { it.id == widget.id }
@@ -48,6 +49,7 @@ class WidgetDataManager(private val context: Context) {
         saveWidgetsForContainer(widget.containerId, widgets)
     }
 
+    /** Load all widgets that belong to a given container id */
     fun getWidgetsForContainer(containerId: Int): List<ChildWidgetData> {
         val json = prefs.getString("widgets_$containerId", "[]") ?: "[]"
         val type = object : TypeToken<List<ChildWidgetSerializable>>() {}.type
@@ -90,6 +92,15 @@ class WidgetDataManager(private val context: Context) {
 
         val json = gson.toJson(serializableWidgets)
         prefs.edit().putString("widgets_$containerId", json).apply()
+    }
+
+    /** Track which appWidgetId corresponds to which logical container */
+    fun setAppWidgetMapping(appWidgetId: Int, containerId: Int) {
+        prefs.edit().putInt("map_$appWidgetId", containerId).apply()
+    }
+
+    fun getContainerIdForAppWidget(appWidgetId: Int): Int {
+        return prefs.getInt("map_$appWidgetId", -1)
     }
 
     fun getAllContainers(): List<Int> {
