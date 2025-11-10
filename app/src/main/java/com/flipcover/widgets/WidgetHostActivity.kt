@@ -82,7 +82,7 @@ class WidgetHostActivity : AppCompatActivity() {
         appWidgetHost.stopListening()
     }
 
-    @Deprecated("Deprecated API but still required for widget config flow")
+    @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
