@@ -145,13 +145,14 @@ class WidgetHostActivity : AppCompatActivity() {
 
         addWidgetToContainer(hostView, appWidgetId, info)
         
-        hostView.post {
+        hostView.postDelayed({
             val preview = captureWidgetSnapshot(hostView)
             saveWidgetData(appWidgetId, info, preview)
-        }
+            updateCoverScreenWidget()
+        }, 1000)
 
         pendingAppWidgetId = -1
-        Toast.makeText(this, "Widget added!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Widget added successfully!", Toast.LENGTH_SHORT).show()
     }
 
     private fun addWidgetToContainer(
@@ -288,6 +289,7 @@ class WidgetHostActivity : AppCompatActivity() {
             updateCoverScreenWidget()
         }
     }
+    
 
     private fun saveWidgetData(appWidgetId: Int, info: AppWidgetProviderInfo, preview: Bitmap? = null) {
         val gs = WidgetSizeCalculator.calculateGridSize(info)
@@ -320,18 +322,26 @@ class WidgetHostActivity : AppCompatActivity() {
     private fun captureWidgetSnapshot(view: AppWidgetHostView): Bitmap? {
         return try {
             if (view.width == 0 || view.height == 0) {
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec(view.layoutParams.width, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(view.layoutParams.height, View.MeasureSpec.EXACTLY)
+                )
+                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            }
+            
+            val width = if (view.width > 0) view.width else view.measuredWidth
+            val height = if (view.height > 0) view.height else view.measuredHeight
+            
+            if (width <= 0 || height <= 0) {
                 return null
             }
             
-            val bitmap = Bitmap.createBitmap(
-                view.width,
-                view.height,
-                Bitmap.Config.ARGB_8888
-            )
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
             view.draw(canvas)
             bitmap
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
