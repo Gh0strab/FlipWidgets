@@ -3,9 +3,12 @@ package com.flipcover.widgets
 import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import android.graphics.Bitmap
+import java.io.ByteArrayOutputStream
 
 data class ChildWidgetData(
     val id: String,
@@ -60,6 +63,7 @@ class WidgetDataManager(private val context: Context) {
                 id = serializable.id,
                 provider = ComponentName(serializable.providerPackage, serializable.providerClass),
                 label = serializable.label,
+                icon = base64ToBitmap(serializable.iconBase64),
                 gridX = serializable.gridX,
                 gridY = serializable.gridY,
                 gridWidth = serializable.gridWidth,
@@ -82,6 +86,7 @@ class WidgetDataManager(private val context: Context) {
                 providerPackage = widget.provider.packageName,
                 providerClass = widget.provider.className,
                 label = widget.label,
+                iconBase64 = bitmapToBase64(widget.icon),
                 gridX = widget.gridX,
                 gridY = widget.gridY,
                 gridWidth = widget.gridWidth,
@@ -92,6 +97,28 @@ class WidgetDataManager(private val context: Context) {
 
         val json = gson.toJson(serializableWidgets)
         prefs.edit().putString("widgets_$containerId", json).apply()
+    }
+    
+    private fun bitmapToBase64(bitmap: Bitmap?): String? {
+        if (bitmap == null) return null
+        return try {
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+            val byteArray = byteArrayOutputStream.toByteArray()
+            Base64.encodeToString(byteArray, Base64.DEFAULT)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    private fun base64ToBitmap(base64String: String?): Bitmap? {
+        if (base64String == null) return null
+        return try {
+            val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /** Track which appWidgetId corresponds to which logical container */
