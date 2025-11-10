@@ -10,7 +10,7 @@ data class ChildWidgetData(
     val id: String,
     val provider: ComponentName,
     val label: String,
-    val icon: String? = null,
+    val icon: Bitmap? = null,  // ✅ RESTORED Bitmap
     val gridX: Int,
     val gridY: Int,
     val gridWidth: Int,
@@ -23,6 +23,7 @@ data class ChildWidgetSerializable(
     val providerPackage: String,
     val providerClass: String,
     val label: String,
+    val iconBase64: String? = null, // reserved for later
     val gridX: Int,
     val gridY: Int,
     val gridWidth: Int,
