@@ -16,8 +16,6 @@ import com.google.android.material.appbar.MaterialToolbar
 class MainActivity : AppCompatActivity() {
 
     private lateinit var widgetRecyclerView: RecyclerView
-    private lateinit var addWidgetButton: MaterialButton
-    private lateinit var editGridButton: MaterialButton
     private lateinit var openWidgetHostButton: MaterialButton
     private lateinit var widgetDataManager: WidgetDataManager
     private var defaultContainerId = 1
@@ -41,22 +39,10 @@ class MainActivity : AppCompatActivity() {
         widgetRecyclerView = findViewById(R.id.widgetRecyclerView)
         widgetRecyclerView.layoutManager = LinearLayoutManager(this)
 
-        addWidgetButton = findViewById(R.id.addWidgetButton)
-        addWidgetButton.setOnClickListener {
-            val intent = Intent(this, WidgetSelectorActivity::class.java)
-            startActivity(intent)
-        }
-
-        editGridButton = findViewById(R.id.editGridButton)
-        editGridButton.setOnClickListener {
-            val intent = Intent(this, GridEditorActivity::class.java)
-            intent.putExtra("container_id", defaultContainerId)
-            startActivity(intent)
-        }
-
         openWidgetHostButton = findViewById(R.id.openWidgetHostButton)
         openWidgetHostButton.setOnClickListener {
             val intent = Intent(this, WidgetHostActivity::class.java)
+            intent.putExtra("container_id", defaultContainerId)
             startActivity(intent)
         }
     }
