@@ -5,7 +5,12 @@ import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
+import android.content.ComponentName
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.widget.GridLayout
 import android.widget.Toast
@@ -166,13 +171,20 @@ class WidgetHostActivity : AppCompatActivity() {
 
     private fun saveWidgetData(appWidgetId: Int, info: AppWidgetProviderInfo) {
         val gs = WidgetSizeCalculator.calculateGridSize(info)
+        
+        val iconBitmap = try {
+            val drawable = info.loadIcon(this, resources.displayMetrics.densityDpi)
+            drawableToBitmap(drawable)
+        } catch (e: Exception) {
+            null
+        }
 
         widgetDataManager.saveWidget(
             ChildWidgetData(
                 id = appWidgetId.toString(),
                 provider = info.provider,
                 label = info.loadLabel(packageManager),
-                icon = null,
+                icon = iconBitmap,
                 gridX = 0,
                 gridY = 0,
                 gridWidth = gs.columnSpan,
@@ -180,6 +192,32 @@ class WidgetHostActivity : AppCompatActivity() {
                 containerId = containerId
             )
         )
+        
+        updateCoverScreenWidget()
+    }
+    
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        if (drawable is BitmapDrawable) {
+            return drawable.bitmap
+        }
+        
+        val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
+        val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
+        
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bitmap
+    }
+    
+    private fun updateCoverScreenWidget() {
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(
+            ComponentName(this, CoverWidgetProvider::class.java)
+        )
+        for (widgetId in appWidgetIds) {
+            CoverWidgetProvider.updateAppWidget(this, appWidgetManager, widgetId)
+        }
     }
 
     private fun loadWidgets() {
