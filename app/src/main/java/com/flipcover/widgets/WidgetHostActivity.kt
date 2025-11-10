@@ -66,6 +66,7 @@ class WidgetHostActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        appWidgetHost.onActivityResult(requestCode, resultCode, data)
         
         if (resultCode == RESULT_OK) {
             when (requestCode) {
@@ -123,6 +124,9 @@ class WidgetHostActivity : AppCompatActivity() {
             )
 
             if (!hasPermission) {
+                if (pendingAppWidgetId != -1 && pendingAppWidgetId != appWidgetId) {
+                        appWidgetHost.deleteAppWidgetId(pendingAppWidgetId)
+                }
                 pendingAppWidgetId = appWidgetId
                 val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_BIND)
                 intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -211,7 +215,10 @@ class WidgetHostActivity : AppCompatActivity() {
         val heightDp = (heightPx / density).toInt()
         hostView.updateAppWidgetSize(null, widthDp, heightDp, widthDp, heightDp)
         
-        widgetContainer.addView(hostView)
+        // <<< REPLACE THESE LINES >>>
+        // widgetContainer.addView(hostView)
+        // <<< WITH >>>
+        safeAddToContainer(hostView, params)
     }
 
     private fun saveWidgetData(appWidgetId: Int, appWidgetInfo: AppWidgetProviderInfo) {
@@ -265,5 +272,14 @@ class WidgetHostActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         finish()
         return true
+    
+    }
+    private fun safeAddToContainer(hostView: AppWidgetHostView, params: GridLayout.LayoutParams) {
+    widgetContainer.post {
+        widgetContainer.addView(hostView, params)
+        hostView.post {
+            hostView.requestLayout()
+            hostView.invalidate()
+        }
     }
 }
