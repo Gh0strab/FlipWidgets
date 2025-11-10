@@ -4,22 +4,26 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="4dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:minHeight="72dp">
 
     <ImageView
         android:id="@+id/widgetIcon"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:scaleType="centerInside"
-        android:contentDescription="Widget Icon" />
+        android:contentDescription="Widget Icon"
+        android:background="@android:color/transparent" />
 
     <TextView
         android:id="@+id/widgetLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:textSize="10sp"
-        android:maxLines="1"
+        android:maxLines="2"
         android:ellipsize="end"
-        android:gravity="center" />
+        android:gravity="center"
+        android:textColor="?android:attr/textColorPrimary" />
 
 </LinearLayout>
